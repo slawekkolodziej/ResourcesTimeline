@@ -1,0 +1,44 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 120%;
+}
+
+h1 {
+    font-size: 3em;
+    margin: 1em 0;
+    text-align: center;
+}
+
+p {
+    text-align: justify;
+}
+
+img {
+    max-width: 100%;
+}
+
+.container {
+    margin: 0 auto;
+    max-width: 30em;
+}
+
+.bookmarklet-area {
+    border: 1px dashed #999;
+    margin: 0 auto;
+    padding: 1em;
+}
+
+.bookmarklet-area,
+.bookmarklet-area p {
+    text-align: center;
+}
+
+
+.bookmarklet {
+    border: 1px solid #000;
+    color: #000;
+    cursor: move;
+    display: inline-block;
+    padding: 0.5em 1em;
+    text-decoration: none;
+}
