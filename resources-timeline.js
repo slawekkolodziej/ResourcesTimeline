@@ -152,10 +152,17 @@
         // where we can put detailed informations
         setData: function (data) {
             this.data = data;
-            this.extremes = data.reduce(this.getExtremes);
+            this.extremes = [];
+
+            var extremes = data.reduce(this.getExtremes);
+
+            // Take previously defined extremes into account
+            this.extremes[0] = (isNum(this.min) && this.min < extremes[0]) ? this.min : extremes[0];
+            this.extremes[1] = (isNum(this.max) && this.max > extremes[1]) ? this.max : extremes[1];
 
             // Round up right extreme
             this.extremes[1] = Math.ceil(this.extremes[1] / 100) * 100;
+
 
             this.updateScale();
         },
@@ -163,19 +170,7 @@
         // Method used to retrieve extremes for the current data. This method
         // was made to work with Array#reduce inside setData
         getExtremes: function (a, b, n) {
-            a = (n === 1) ? a[0] : a;
-            
-            var current = [];
-            
-            if (isNum(this.max)) {
-                current.push(this.max);
-            }
-
-            if (isNum(this.min)) {
-                current.push(this.min);
-            }
-
-            var arr = a.concat(b[0], current),
+            var arr = b[0].concat(n === 1 ? a[0] : a),
                 max = Math.max.apply(null, arr),
                 min = Math.min.apply(null, arr);
 
@@ -291,16 +286,18 @@
             
             labels.forEach(function (label, n) {
                 var labelY = this.scaleX * (n + 0.5) + marginTop;
-                fragment.appendChild(this.renderLabel(marginLeft, labelY, label.slice(0, 20)));
+                fragment.appendChild(this.renderLabel(0, labelY, label.slice(0, 20)));
             }, this);
-            
+
+            attr(group, 'transform', 'translate(' + marginLeft + ',0)');
+
             group.appendChild(fragment);
             this.container.appendChild(group);
 
-            // After rendering labels, measure the size of them...
+            // After rendering labels, measure the size of its group...
             bbox = group.getBBox();
             
-            // ...and update left margin, so the data won't overlap labels
+            // ...and update the left margin (bbox already contains sum of previous margins)
             this.margin[3] = marginLeft + bbox.width + 10;
         },
 
@@ -448,8 +445,9 @@
 
         // Calculate page load times
         var timing = perf.timing,
-            domComplete = timing.domInteractive - timing.navigationStart,
-            loaded = timing.loadEventStart - timing.navigationStart;
+            navStart = timing.navigationStart,
+            domComplete = timing.domInteractive - navStart,
+            loaded = timing.loadEventStart - navStart;
 
 
         // Transform resources into format accepted by SimpleGantt
@@ -457,13 +455,19 @@
             return [[res.startTime, res.responseStart || res.startTime, res.responseEnd], res];
         });
 
+        data.unshift([[0, timing.responseStart - navStart, timing.domLoading - navStart], {
+            duration: timing.domLoading - navStart,
+            initiatorType: 'other',
+            name: 'document'
+        }]);
+
         // Prepare names and initators arrays
         var names = data.map(function (point) {
             return getName(point[1].name);
         });
 
         var initiators = data.map(function (point) {
-            return getName(point[1].initiatorType);
+            return point[1].initiatorType;
         });
 
 
